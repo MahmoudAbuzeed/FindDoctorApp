@@ -1,4 +1,7 @@
 const graphql = require('graphql');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 
 
 const Governorate = require('../model/governorate');
@@ -13,7 +16,8 @@ const {
    DoctorsType,
    SpecializationType,
    UserPatientType,
-   UserDoctorType
+   UserDoctorType,
+   
 } = require('./types');
 
 
@@ -34,6 +38,72 @@ const {
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
+
+       // ---------- Login ---------- //
+       doctorLogin: {
+        type: UserDoctorType,
+        args: {
+             email: { type: GraphQLString},
+             password: { type: GraphQLString}
+
+         },
+         resolve: async(parent, args)=>{
+            const doctor = await UserDoctor.findOne({ email: args.email });
+            if (!doctor) {
+                throw new Error('User does not exist!');
+              }
+              const isEqual = await bcrypt.compare(args.password, doctor.password);
+              if (!isEqual) {
+                throw new Error('Password is incorrect!');
+              }
+              const token = jwt.sign(
+                { userId: doctor.id, email: doctor.email },
+                'somesupersecretkey',
+                {
+                  expiresIn: '7d'
+                }
+              );
+              return {email: doctor.email, id: doctor.id, token: token, tokenExpiration: 1 };
+              
+            }
+   
+    },
+
+    patientLogin: {
+        type: UserPatientType,
+        args: {
+             email: { type: GraphQLString},
+             password: { type: GraphQLString},
+             
+
+         },
+        resolve: async(parent, args)=>{
+            const patient = await UserPatient.findOne({ email: args.email });
+            if (!patient) {
+                throw new Error('User does not exist!');
+              }
+              const isEqual = await bcrypt.compare(args.password, patient.password);
+              if (!isEqual) {
+                throw new Error('Password is incorrect!');
+              }
+              const token = jwt.sign(
+                { userId: patient.id, email: patient.email },
+                'somesupersecretkey',
+                {
+                  expiresIn: '7d'
+                }
+              );
+              return {id: patient.id, token: token, tokenExpiration: 1 };
+            }
+      
+    
+    
+          
+        
+        
+        
+    },
+
 
 
 
@@ -141,7 +211,10 @@ const Mutation = new GraphQLObjectType({
                 specializationId: { type: new GraphQLNonNull(GraphQLString) },
 
             },
-            resolve(parent, args){
+            resolve(parent, args, req){
+                if(!req.isAuth) {
+                    throw new Error('Unauthenticated!');
+                  }
                 let doctors = new Doctors({
                     name: args.name,
                     certificates: args.certificates,
@@ -164,7 +237,10 @@ const Mutation = new GraphQLObjectType({
                 
 
             },
-            resolve(parent, args){
+            resolve(parent, args, req){
+                if(!req.isAuth) {
+                    throw new Error('Unauthenticated!');
+                  }
                 let governorate = new Governorate({
                     name: args.name,
                     
@@ -179,7 +255,10 @@ const Mutation = new GraphQLObjectType({
                 
 
             },
-            resolve(parent, args){
+            resolve(parent, args, req){
+                if(!req.isAuth) {
+                    throw new Error('Unauthenticated!');
+                  }
                 let specialization = new Specialization({
                     name: args.name,
                     
@@ -188,7 +267,7 @@ const Mutation = new GraphQLObjectType({
             }
         },
 
-        addDoctorUser: { 
+        addUserDoctor: { 
             type: UserDoctorType,
             args: {
                 name : { type: new GraphQLNonNull(GraphQLString) },
@@ -198,7 +277,17 @@ const Mutation = new GraphQLObjectType({
                 
 
             },
-            resolve(parent, args){
+            resolve: async (parent, args, req) =>{
+                
+                try {
+                    const existingUser = await UserDoctor.findOne({ email: args.email });
+                    if (existingUser) {
+                      throw new Error('User exists already.');
+                    }
+                return bcrypt
+                .hash(args.password, 10)
+               .then(hash => {
+               args.password = hash;
                 let userDoctor = new UserDoctor({
                     name: args.name,
                     email: args.email,
@@ -207,26 +296,49 @@ const Mutation = new GraphQLObjectType({
                     
                 });
                 return userDoctor.save();
+            })
+        
+            }catch (err) {
+                throw err;
+              }
             }
+        
         },
 
-        addPatientUser: { 
+        addUserPatient: { 
             type: UserPatientType,
             args: {
                 name : { type: new GraphQLNonNull(GraphQLString) },
-                email : { type: new GraphQLNonNull(GraphQLString) },
+                email : { type: new GraphQLNonNull(GraphQLString) } ,
                 password : { type: new GraphQLNonNull(GraphQLString) },
                 
 
             },
-            resolve(parent, args){
-                let patientUser = new UserPatient({
+            resolve: async (parent, args, req) => {
+                
+                try {
+                const existingUser = await UserPatient.findOne({ email: args.email });
+                if (existingUser) {
+                  throw new Error('User exists already.');
+                }
+                return bcrypt
+                .hash(args.password, 10)
+               .then(hash => {
+               args.password = hash;
+               
+                let userPatient = new UserPatient({
                     name: args.name,
                     email: args.email,
                     password: args.password,
                     
                 });
-                return patientUser.save();
+                return userPatient.save();
+            })
+        }catch (err) {
+            throw err;
+          }
+        
+
             }
         },
 

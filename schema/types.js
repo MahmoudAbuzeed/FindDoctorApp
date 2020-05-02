@@ -20,26 +20,35 @@ const {
 } = graphql;
 
 
+
+
+
+
 const UserPatientType = new GraphQLObjectType({
-    name: "Patient",
+    name: "UserPatient",
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         email: { type: GraphQLString },
         password: { type: GraphQLString },
+        token: { type: GraphQLString },
+        tokenExpiration: { type: GraphQLString },
+
         
 
     })
 });
 
 const UserDoctorType = new GraphQLObjectType({
-    name: "Doctor",
+    name: "UserDoctor",
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         email: { type: GraphQLString },
         password: { type: GraphQLString },
         specialization: { type: GraphQLString },
+        token: { type: GraphQLString },
+        tokenExpiration: { type: GraphQLString },
         
         
 
@@ -100,5 +109,6 @@ module.exports = {
     DoctorsType,
     SpecializationType,
     UserPatientType,
-    UserDoctorType
+    UserDoctorType,
+    
 }
