@@ -1,15 +1,12 @@
 const graphql = require('graphql');
 
-const Cardiologist = require('../models/Doctors/cardiologist-model');
-const Dentist = require('../models/Doctors/dentist-model');
-const Dermatologist = require('../models/Doctors/dermatologist-model');
-const Inernist = require('../models/Doctors/inernist-model');
-const Orthopedist = require('../models/Doctors/orthopedist-model');
-const Physiotherapist = require('../models/Doctors/physiotherapist-model');
-const PlasticSurgeon = require('../models/Doctors/plasticSurgeon-model');
-const Surgery = require('../models/Doctors/surgery-model');
-const Urologist = require('../models/Doctors/urologist-model');
-const Governorate = require('../models/governorate-model');
+
+const Governorate = require('../model/governorate');
+const Specialization = require('../model/specialization');
+
+
+
+
 
 
 
@@ -23,6 +20,33 @@ const {
 } = graphql;
 
 
+const UserPatientType = new GraphQLObjectType({
+    name: "Patient",
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        email: { type: GraphQLString },
+        password: { type: GraphQLString },
+        
+
+    })
+});
+
+const UserDoctorType = new GraphQLObjectType({
+    name: "Doctor",
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        email: { type: GraphQLString },
+        password: { type: GraphQLString },
+        specialization: { type: GraphQLString },
+        
+        
+
+    })
+});
+
+
 const GovernorateType = new GraphQLObjectType({
     name: "Governorate",
     fields: () => ({
@@ -33,13 +57,24 @@ const GovernorateType = new GraphQLObjectType({
     })
 });
 
+const SpecializationType = new GraphQLObjectType({
+    name: "Specialization",
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString }
+        
 
-const CardiologistType = new GraphQLObjectType({
-    name: "Cardilogist",
+    })
+});
+
+
+const DoctorsType = new GraphQLObjectType({
+    name: "Doctors",
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString},
         certificates: { type: GraphQLString},
+        address: { type: GraphQLString},
         telephone: { type: GraphQLString},
         fees: { type: GraphQLString},
         dates: { type: GraphQLString},
@@ -47,6 +82,12 @@ const CardiologistType = new GraphQLObjectType({
             type: GovernorateType,
             resolve(parent, args){
                 return Governorate.findById(parent.governorateId)
+            }
+        },
+        specialization: {
+            type: SpecializationType,
+            resolve(parent, args){
+                return Specialization.findById(parent.specializationId)
             }
         }
     })
@@ -56,5 +97,8 @@ const CardiologistType = new GraphQLObjectType({
 
 module.exports = {
     GovernorateType,
-    CardiologistType
+    DoctorsType,
+    SpecializationType,
+    UserPatientType,
+    UserDoctorType
 }

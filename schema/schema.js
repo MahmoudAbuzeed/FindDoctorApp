@@ -1,21 +1,19 @@
 const graphql = require('graphql');
 
 
-const Cardiologist = require('../models/Doctors/cardiologist-model');
-const Dentist = require('../models/Doctors/dentist-model');
-const Dermatologist = require('../models/Doctors/dermatologist-model');
-const Inernist = require('../models/Doctors/inernist-model');
-const Orthopedist = require('../models/Doctors/orthopedist-model');
-const Physiotherapist = require('../models/Doctors/physiotherapist-model');
-const PlasticSurgeon = require('../models/Doctors/plasticSurgeon-model');
-const Surgery = require('../models/Doctors/surgery-model');
-const Urologist = require('../models/Doctors/urologist-model');
-const Governorate = require('../models/governorate-model');
+const Governorate = require('../model/governorate');
+const Doctors = require('../model/doctors');
+const Specialization = require('../model/specialization');
+const UserPatient = require('../model/Users/patient');
+const UserDoctor = require('../model/Users/doctor');
 
 
 const {
    GovernorateType,
-   CardiologistType
+   DoctorsType,
+   SpecializationType,
+   UserPatientType,
+   UserDoctorType
 } = require('./types');
 
 
@@ -27,49 +25,100 @@ const {
     GraphQLID,
     GraphQLInt,
     GraphQLList,
+    GraphQLNonNull
 } = graphql;
 
-
+ 
 // ---------- Query ---------- //
 
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
 
+
+
+         // ---------- Return User and all Users ---------- //
+
+
+         userPatient: {
+            type: UserPatientType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args){
+                return UserPatient.findById(args.id);
+            }
+        },
+       
+        userPatients: {
+            type: new GraphQLList(UserPatientType),
+            resolve(parent, args){
+                return UserPatient.find({});
+            }
+        },
+
+        userDoctor: {
+            type: UserDoctorType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args){
+                return UserDoctor.findById(args.id);
+            }
+        },
+       
+        userDoctors: {
+            type: new GraphQLList(UserDoctorType),
+            resolve(parent, args){
+                return UserDoctor.find({});
+            }
+        },
        // ---------- Return Governorate and all Governorates ---------- //
        governorate: {
-        type: GovernorateType,
-        args : {id: { type: GraphQLID}},
-        resolve(parent ,args){
-            return Governorate.findById(args.id)
-        }
+           type: GovernorateType,
+           args: {id: { type: GraphQLID} },
+           resolve(parent ,args){
+               return Governorate.findById(args.id)
+           }
        },
        governorates: {
-        type: new GraphQLList(GovernorateType),
-        resolve(parent, args){
-            return Governorate.find({});
-        }
+           type: new GraphQLList(GovernorateType),
+           resolve(parent, args){
+               return Governorate.find({});
+           }
        },
-
-
-
-
-       // ---------- Return Cardiologist and all Cardiologists ---------- //
-      cardiologist: {
-          type: CardiologistType,
-          args: {id: { type: GraphQLID } },
-          reslove(parent, args){
-              return Cardiologist.findById(args.id);
-          }
-      },
-      cardiologists: {
-          type: new GraphQLList(CardiologistType),
-          resolve(parent, args){
-              return Cardiologist.find({});
-          }
-      },
-  
    
+       // ---------- Return specialization and all specializations ---------- //
+   
+       specialization: {
+        type: SpecializationType,
+        args: { id: { type: GraphQLID } },
+        resolve(parent, args){
+            return Specialization.findById(args.id);
+        }
+    },
+       specializations: {
+           type: new GraphQLList(SpecializationType),
+           resolve(parent, args){
+               return Specialization.find({});
+           }
+       },
+   
+       // ---------- Return Doctors and all Doctors ---------- //
+       doctor: {
+        type: DoctorsType,
+        args: { id: { type: GraphQLID } },
+        resolve(parent, args){
+            return Doctors.findById(args.id);
+        }
+    },
+       doctors: {
+             type: new GraphQLList(DoctorsType),
+             resolve(parent, args){
+                 return Doctors.find({});
+             }
+       },
+   
+   
+     
+     
+      
     }
 });
 
@@ -79,27 +128,31 @@ const RootQuery = new GraphQLObjectType({
 const Mutation = new GraphQLObjectType({
     name: 'Mutation',
     fields: {
-        addCardilogist: { 
-            type: CardiologistType,
+        addDoctors: { 
+            type: DoctorsType,
             args: {
-                name : {type: GraphQLString},
-                certificates: {type: GraphQLString},
-                telephone: {type: GraphQLString},
-                fees: {type: GraphQLString},
-                dates: {type: GraphQLString},
-                governorateId: {type: GraphQLString}
+                name : { type: new GraphQLNonNull(GraphQLString) },
+                certificates: { type: new GraphQLNonNull(GraphQLString) },
+                telephone: { type: new GraphQLNonNull(GraphQLString) },
+                address: { type: new GraphQLNonNull(GraphQLString) },
+                fees: { type: new GraphQLNonNull(GraphQLString) },
+                dates: { type: new GraphQLNonNull(GraphQLString) },
+                governorateId: { type: new GraphQLNonNull(GraphQLString) },
+                specializationId: { type: new GraphQLNonNull(GraphQLString) },
 
             },
             resolve(parent, args){
-                let cardiologist = new Cardiologist({
+                let doctors = new Doctors({
                     name: args.name,
                     certificates: args.certificates,
                     telephone: args.telephone,
+                    address: args.address,
                     fees: args.fees,
                     dates: args.dates,
-                    governorateId: args.governorateId
+                    governorateId: args.governorateId,
+                    specializationId: args.specializationId
                 });
-                return cardiologist.save();
+                return doctors.save();
             }
         },
 
@@ -107,7 +160,7 @@ const Mutation = new GraphQLObjectType({
         addGovernorate: { 
             type: GovernorateType,
             args: {
-                name : {type: GraphQLString},
+                name : { type: new GraphQLNonNull(GraphQLString) },
                 
 
             },
@@ -117,6 +170,63 @@ const Mutation = new GraphQLObjectType({
                     
                 });
                 return governorate.save();
+            }
+        },
+        addSpecialization: { 
+            type: SpecializationType,
+            args: {
+                name : { type: new GraphQLNonNull(GraphQLString) },
+                
+
+            },
+            resolve(parent, args){
+                let specialization = new Specialization({
+                    name: args.name,
+                    
+                });
+                return specialization.save();
+            }
+        },
+
+        addDoctorUser: { 
+            type: UserDoctorType,
+            args: {
+                name : { type: new GraphQLNonNull(GraphQLString) },
+                email : { type: new GraphQLNonNull(GraphQLString) },
+                password : { type: new GraphQLNonNull(GraphQLString) },
+                specialization : { type: new GraphQLNonNull(GraphQLString) },
+                
+
+            },
+            resolve(parent, args){
+                let userDoctor = new UserDoctor({
+                    name: args.name,
+                    email: args.email,
+                    password: args.password,
+                    specialization: args.specialization,
+                    
+                });
+                return userDoctor.save();
+            }
+        },
+
+        addPatientUser: { 
+            type: UserPatientType,
+            args: {
+                name : { type: new GraphQLNonNull(GraphQLString) },
+                email : { type: new GraphQLNonNull(GraphQLString) },
+                password : { type: new GraphQLNonNull(GraphQLString) },
+                
+
+            },
+            resolve(parent, args){
+                let patientUser = new UserPatient({
+                    name: args.name,
+                    email: args.email,
+                    password: args.password,
+                    
+                });
+                return patientUser.save();
             }
         },
 
