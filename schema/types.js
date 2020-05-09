@@ -3,6 +3,7 @@ const graphql = require('graphql');
 
 const Governorate = require('../model/governorate');
 const Specialization = require('../model/specialization');
+const Doctors = require('../model/doctors');
 
 
 
@@ -60,7 +61,15 @@ const GovernorateType = new GraphQLObjectType({
     name: "Governorate",
     fields: () => ({
         id: { type: GraphQLID },
-        name: { type: GraphQLString }
+        name: { type: GraphQLString },
+        doctors: {
+            type: new GraphQLList(DoctorsType),
+            resolve(parent, args){
+                return Doctors.find({ governorateId: parent.id });
+            }
+
+        }
+
         
 
     })
@@ -70,7 +79,14 @@ const SpecializationType = new GraphQLObjectType({
     name: "Specialization",
     fields: () => ({
         id: { type: GraphQLID },
-        name: { type: GraphQLString }
+        name: { type: GraphQLString },
+        doctors: {
+            type: new GraphQLList(DoctorsType),
+            resolve(parent, args){
+                return Doctors.find({ specializationId: parent.id });
+            }
+
+        }
         
 
     })
@@ -98,7 +114,7 @@ const DoctorsType = new GraphQLObjectType({
             resolve(parent, args){
                 return Specialization.findById(parent.specializationId)
             }
-        }
+        },
     })
 });
 

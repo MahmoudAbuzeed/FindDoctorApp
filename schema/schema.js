@@ -212,9 +212,9 @@ const Mutation = new GraphQLObjectType({
 
             },
             resolve(parent, args, req){
-                if(!req.isAuth) {
+                /*if(!req.isAuth) {
                     throw new Error('Unauthenticated!');
-                  }
+                  }*/
                 let doctors = new Doctors({
                     name: args.name,
                     certificates: args.certificates,
@@ -339,6 +339,57 @@ const Mutation = new GraphQLObjectType({
           }
         
 
+            }
+        },
+
+
+        deleteDoctor: {
+            type: DoctorsType,
+            args: {
+                id: { type: GraphQLID }
+            },
+            resolve(parent, args, req){
+               /* if(!req.isAuth) {
+                    throw new Error('Unauthenticated!');
+                    
+                  } */
+                  return Doctors.findByIdAndDelete(args.id); 
+            }
+        },
+
+
+        updateDoctor: {
+            type: DoctorsType,
+            args: {
+                id: { type: GraphQLID },
+                name: { type: GraphQLString },
+                certificates: { type: GraphQLString },
+                telephone: { type: GraphQLString },
+                address: { type: GraphQLString },
+                fees: { type: GraphQLString },
+                dates: { type: GraphQLString },
+                governorateId: { type: GraphQLString },
+                specializationId: { type: GraphQLString },
+                
+            },
+            resolve(parent, args, req){
+               /* if(!req.isAuth) {
+                    throw new Error('Unauthenticated!');
+                    
+                  } */
+                  return Doctors.findByIdAndUpdate({"_id" : args.id},
+                    { "$set":{
+                        name: args.name,
+                        certificates: args.certificates,
+                        telephone: args.telephone,
+                        address: args.address,
+                        fees: args.fees,
+                        dates: args.dates,
+                        governorateId: args.governorateId,
+                        specializationId: args.specializationId,
+                    }},
+                    {"new": true} 
+                     ); 
             }
         },
 
